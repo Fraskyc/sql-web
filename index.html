@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Správa uživatelů, produktů a objednávek</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 900px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .section {
+            flex: 1;
+            min-width: 250px;
+        }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            background: #3a7cff;
+            color: white;
+            cursor: pointer;
+            border: none;
+        }
+        button:hover {
+            background: #030fff;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            background: #fff;
+            margin: 5px;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="section">
+            <h2>Přidat uživatele</h2>
+            <input type="text" id="userName" placeholder="Jméno uživatele">
+            <button onclick="addUser()">Přidat</button>
+            <h2>Upravit uživatele</h2>
+            <input type="number" id="editUserId" placeholder="ID uživatele">
+            <input type="text" id="editUserName" placeholder="Nové jméno">
+            <button onclick="updateUser()">Upravit</button>
+            <h2>Smazat uživatele</h2>
+            <input type="number" id="deleteUserId" placeholder="ID uživatele">
+            <button onclick="deleteUser()">Smazat</button>
+            <h2>Seznam uživatelů</h2>
+            <button onclick="getUsers()">Načíst uživatele</button>
+            <ul id="userList"></ul>
+        </div>
+        <div class="section">
+            <h2>Přidat produkt</h2>
+            <input type="text" id="productName" placeholder="Název produktu">
+            <button onclick="addProduct()">Přidat</button>
+            <h2>Upravit produkt</h2>
+            <input type="number" id="editProductId" placeholder="ID produktu">
+            <input type="text" id="editProductName" placeholder="Nový název">
+            <button onclick="updateProduct()">Upravit</button>
+            <h2>Smazat produkt</h2>
+            <input type="number" id="deleteProductId" placeholder="ID produktu">
+            <button onclick="deleteProduct()">Smazat</button>
+            <h2>Seznam produktů</h2>
+            <button onclick="getProducts()">Načíst produkty</button>
+            <ul id="productList"></ul>
+        </div>
+        <div class="section">
+            <h2>Vytvořit objednávku</h2>
+            <input type="number" id="orderUserId" placeholder="ID uživatele">
+            <input type="number" id="orderProductId" placeholder="ID produktu">
+            <button onclick="addOrder()">Vytvořit objednávku</button>
+            <h2>Seznam objednávek</h2>
+            <button onclick="getOrders()">Načíst objednávky</button>
+            <ul id="orderList"></ul>
+        </div>
+    </div>
+    
+    <script>
+        const API_URL = "http://localhost:3001";
+        
+        async function addUser() {
+            const name = document.getElementById("userName").value;
+            if (!name) return alert("Zadejte jméno!");
+            const response = await fetch(`${API_URL}/users`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name })
+            });
+            getUsers();
+        }
+
+        async function getUsers() {
+            const response = await fetch(`${API_URL}/users`);
+            const users = await response.json();
+            document.getElementById("userList").innerHTML = users.map(u => `<li>ID: ${u.id}, ${u.name}</li>`).join("");
+        }
+        
+        async function deleteUser() {
+            const id = document.getElementById("deleteUserId").value;
+            await fetch(`${API_URL}/users/${id}`, { method: "DELETE" });
+            getUsers();
+        }
+        
+        async function addProduct() {
+            const name = document.getElementById("productName").value;
+            if (!name) return alert("Zadejte název produktu!");
+            await fetch(`${API_URL}/products`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name })
+            });
+            getProducts();
+        }
+        
+        async function getProducts() {
+            const response = await fetch(`${API_URL}/products`);
+            const products = await response.json();
+            document.getElementById("productList").innerHTML = products.map(p => `<li>ID: ${p.id}, ${p.name}</li>`).join("");
+        }
+        
+        async function deleteProduct() {
+            const id = document.getElementById("deleteProductId").value;
+            await fetch(`${API_URL}/products/${id}`, { method: "DELETE" });
+            getProducts();
+        }
+        
+        async function addOrder() {
+            const userId = document.getElementById("orderUserId").value;
+            const productId = document.getElementById("orderProductId").value;
+            if (!userId || !productId) return alert("Zadejte ID uživatele a produktu!");
+            await fetch(`${API_URL}/orders`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ user_id: userId, product_id: productId })
+            });
+            getOrders();
+        }
+        
+        async function getOrders() {
+            const response = await fetch(`${API_URL}/orders`);
+            const orders = await response.json();
+            document.getElementById("orderList").innerHTML = orders.map(o => `<li>ID: ${o.id}, Uživatel: ${o.user_name}, Produkt: ${o.product_name}</li>`).join("");
+        }
+        
+        async function deleteOrder() {
+            const id = document.getElementById("deleteOrderId").value;
+            await fetch(`${API_URL}/orders/${id}`, { method: "DELETE" });
+            getOrders();
+        }
+        async function updateUser() {
+            const id = document.getElementById("editUserId").value;
+            const name = document.getElementById("editUserName").value;
+            if (!id || !name) return alert("Vyplňte ID a nové jméno!");
+            await fetch(`${API_URL}/users/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name })
+            });
+            getUsers();
+        }
+
+        async function updateProduct() {
+            const id = document.getElementById("editProductId").value;
+            const name = document.getElementById("editProductName").value;
+            if (!id || !name) return alert("Vyplňte ID a nový název!");
+            await fetch(`${API_URL}/products/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name })
+            });
+            getProducts();
+        }
+        getUsers();
+        getProducts();
+        getOrders();
+    </script>
+</body>
+</html>
